@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Registration</title>
+  <style>
+    :root {
+      --bg: #eef2f7; --card: #ffffff; --text: #1d2433; --muted: #5d6679;
+      --line: #c9d1de; --accent: #1f4fd8; --error: #b42318; --ok: #1a7f4b; --head: #e6ebf5;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #12151c; --card: #1b202b; --text: #eef1f7; --muted: #9aa4b8;
+        --line: #343c4d; --accent: #6f93ff; --error: #ff8a7a; --ok: #5fd49a; --head: #252c3a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px 16px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text);
+    }
+    .card {
+      max-width: 960px; margin: 0 auto 24px; background: var(--card);
+      padding: 28px 24px; border-radius: 10px; border: 1px solid var(--line);
+    }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; }
+    h2 { margin: 0; font-size: 1.3rem; }
+    p.sub { margin: 0 0 8px; color: var(--muted); font-size: .95rem; }
+    fieldset { border: 0; border-top: 1px solid var(--line); margin: 22px 0 0; padding: 14px 0 0; }
+    legend { font-weight: 700; font-size: 1.05rem; padding-right: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .full { grid-column: 1 / -1; }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    label { display: block; margin: 14px 0 6px; font-weight: 600; font-size: .9rem; }
+    .req::after { content: " *"; color: var(--error); }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; font-size: 1rem; font-family: inherit;
+      color: var(--text); background: transparent;
+      border: 1px solid var(--line); border-radius: 6px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    input:focus, select:focus, textarea:focus, button:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 1px;
+    }
+    .options { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 4px; }
+    .options label { display: flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; }
+    .options input { width: auto; }
+    .error { color: var(--error); font-size: .82rem; min-height: 1.1em; margin-top: 4px; }
+    .hint { color: var(--muted); font-size: .8rem; margin-top: 4px; }
+    .actions { display: flex; gap: 12px; margin-top: 24px; }
+    button {
+      flex: 1; padding: 12px; font-size: 1rem; font-weight: 600;
+      border-radius: 6px; cursor: pointer; border: 0; color: #fff; background: var(--accent);
+    }
+    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    #success { margin-top: 16px; color: var(--ok); font-weight: 600; text-align: center; }
+
+    /* Registrations list */
+    .list-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+    .list-tools { display: flex; gap: 8px; flex-wrap: wrap; }
+    .list-tools input { width: 220px; padding: 8px 10px; }
+    .list-tools button { flex: none; padding: 8px 14px; font-size: .9rem; }
+    .table-wrap { overflow-x: auto; margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 820px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    th { background: var(--head); font-weight: 700; white-space: nowrap; }
+    tr:last-child td { border-bottom: 0; }
+    td img, .avatar {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+      background: var(--head); display: grid; place-items: center; font-weight: 700;
+    }
+    .del { flex: none; padding: 6px 10px; font-size: .8rem; background: transparent; color: var(--error); border: 1px solid var(--error); }
+    .empty { text-align: center; color: var(--muted); padding: 28px 12px; }
+    .count { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- REGISTRATION FORM -->
+  <form id="regForm" class="card" novalidate>
+    <h1>Student registration</h1>
+    <p class="sub">Fields marked <span style="color:var(--error)">*</span> are required.</p>
+
+    <fieldset>
+      <legend>Personal details</legend>
+      <div class="grid">
+        <div>
+          <label class="req" for="firstName">First name</label>
+          <input id="firstName" type="text" autocomplete="given-name" />
+          <div class="error" id="firstNameErr"></div>
+        </div>
+        <div>
+          <label class="req" for="lastName">Last name</label>
+          <input id="lastName" type="text" autocomplete="family-name" />
+          <div class="error" id="lastNameErr"></div>
+        </div>
+        <div>
+          <label class="req" for="dob">Date of birth</label>
+          <input id="dob" type="date" autocomplete="bday" />
+          <div class="error" id="dobErr"></div>
+        </div>
+        <div>
+          <label class="req">Gender</label>
+          <div class="options">
+            <label><input type="radio" name="gender" value="Female" /> Female</label>
+            <label><input type="radio" name="gender" value="Male" /> Male</label>
+            <label><input type="radio" name="gender" value="Other" /> Other</label>
+          </div>
+          <div class="error" id="genderErr"></div>
+        </div>
+        <div>
+          <label for="bloodGroup">Blood group</label>
+          <select id="bloodGroup">
+            <option value="">Select</option>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+          </select>
+        </div>
+        <div>
+          <label for="photo">Passport photo</label>
+          <input id="photo" type="file" accept="image/*" />
+          <div class="hint">JPG or PNG, up to 2 MB.</div>
+          <div class="error" id="photoErr"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact details</legend>
+      <div class="grid">
+        <div>
+          <label class="req" for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" />
+          <div class="error" id="emailErr"></div>
+        </div>
+        <div>
+          <label class="req" for="phone">Mobile number</label>
+          <input id="phone" type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" />
+          <div class="error" id="phoneErr"></div>
+        </div>
+        <div class="full">
+          <label class="req" for="address">Address</label>
+          <textarea id="address" autocomplete="street-address"></textarea>
+          <div class="error" id="addressErr"></div>
+        </div>
+        <div>
+          <label class="req" for="city">City</label>
+          <input id="city" type="text" autocomplete="address-level2" />
+          <div class="error" id="cityErr"></div>
+        </div>
+        <div>
+          <label class="req" for="state">State</label>
+          <select id="state">
+            <option value="">Select state</option>
+            <option>Tamil Nadu</option><option>Kerala</option><option>Karnataka</option>
+            <option>Andhra Pradesh</option><option>Telangana</option><option>Puducherry</option>
+            <option>Other</option>
+          </select>
+          <div class="error" id="stateErr"></div>
+        </div>
+        <div>
+          <label class="req" for="pincode">Pincode</label>
+          <input id="pincode" type="text" inputmode="numeric" maxlength="6" autocomplete="postal-code" />
+          <div class="error" id="pincodeErr"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Academic details</legend>
+      <div class="grid">
+        <div class="full">
+          <label class="req" for="college">College name</label>
+          <input id="college" type="text" />
+          <div class="error" id="collegeErr"></div>
+        </div>
+        <div>
+          <label class="req" for="regNo">Register number</label>
+          <input id="regNo" type="text" />
+          <div class="error" id="regNoErr"></div>
+        </div>
+        <div>
+          <label class="req" for="course">Course</label>
+          <select id="course">
+            <option value="">Select course</option>
+            <option>B.E / B.Tech</option><option>BBA</option><option>MBA</option>
+            <option>B.Sc</option><option>M.E / M.Tech</option>
+          </select>
+          <div class="error" id="courseErr"></div>
+        </div>
+        <div>
+          <label class="req" for="dept">Department</label>
+          <select id="dept">
+            <option value="">Select department</option>
+            <option>CSE</option><option>IT</option><option>ECE</option>
+            <option>EEE</option><option>Mechanical</option><option>Civil</option>
+            <option>Management Studies</option>
+          </select>
+          <div class="error" id="deptErr"></div>
+        </div>
+        <div>
+          <label class="req" for="year">Year of study</label>
+          <select id="year">
+            <option value="">Select year</option>
+            <option>1st year</option><option>2nd year</option>
+            <option>3rd year</option><option>4th year</option>
+          </select>
+          <div class="error" id="yearErr"></div>
+        </div>
+        <div class="full">
+          <label>Areas of interest</label>
+          <div class="options">
+            <label><input type="checkbox" name="interest" value="Web development" /> Web development</label>
+            <label><input type="checkbox" name="interest" value="Data / DBMS" /> Data / DBMS</label>
+            <label><input type="checkbox" name="interest" value="Java" /> Java</label>
+            <label><input type="checkbox" name="interest" value="Entrepreneurship" /> Entrepreneurship</label>
+            <label><input type="checkbox" name="interest" value="HR / Management" /> HR / Management</label>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Guardian details</legend>
+      <div class="grid">
+        <div>
+          <label class="req" for="guardian">Parent / guardian name</label>
+          <input id="guardian" type="text" />
+          <div class="error" id="guardianErr"></div>
+        </div>
+        <div>
+          <label class="req" for="guardianPhone">Guardian mobile number</label>
+          <input id="guardianPhone" type="tel" inputmode="numeric" maxlength="10" />
+          <div class="error" id="guardianPhoneErr"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Account</legend>
+      <div class="grid">
+        <div>
+          <label class="req" for="password">Password</label>
+          <input id="password" type="password" autocomplete="new-password" />
+          <div class="hint">8+ characters with a letter and a number.</div>
+          <div class="error" id="passwordErr"></div>
+        </div>
+        <div>
+          <label class="req" for="confirm">Confirm password</label>
+          <input id="confirm" type="password" autocomplete="new-password" />
+          <div class="error" id="confirmErr"></div>
+        </div>
+        <div class="full">
+          <div class="options">
+            <label><input id="terms" type="checkbox" /> I confirm the details above are correct and accept the terms.</label>
+          </div>
+          <div class="error" id="termsErr"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="reset" class="secondary">Clear form</button>
+      <button type="submit">Register</button>
+    </div>
+    <div id="success" role="status"></div>
+  </form>
+
+  <!-- REGISTRATIONS LIST (same page) -->
+  <section class="card" id="listSection">
+    <div class="list-head">
+      <div>
+        <h2>Registered students</h2>
+        <div class="count" id="count"></div>
+      </div>
+      <div class="list-tools">
+        <input id="search" type="search" placeholder="Search name, email, reg no…" aria-label="Search registrations" />
+        <button type="button" class="secondary" id="exportBtn">Export CSV</button>
+        <button type="button" class="secondary" id="clearAllBtn">Delete all</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Photo</th><th>Name</th><th>Reg no</th><th>Course / Dept</th><th>Year</th>
+            <th>Email</th><th>Mobile</th><th>City</th><th>Registered on</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById("regForm");
+    const $ = (id) => document.getElementById(id);
+    const val = (id) => $(id).value.trim();
+    const STORE_KEY = "studentRegistrations";
+
+    /* ---------- Storage ---------- */
+    function loadAll() {
+      try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+      catch { return []; }
+    }
+    function saveAll(list) {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); return true; }
+      catch { alert("Could not save. Browser storage may be full."); return false; }
+    }
+
+    /* ---------- Validation ---------- */
+    function setError(field, message) {
+      $(field + "Err").textContent = message;
+      return !message;
+    }
+
+    function validate() {
+      const gender = form.querySelector('input[name="gender"]:checked');
+      const photo = $("photo").files[0];
+      const dob = $("dob").value;
+      const age = dob ? (Date.now() - new Date(dob)) / 31557600000 : 0;
+      const pw = $("password").value;
+      const dup = loadAll().some((s) => s.regNo.toLowerCase() === val("regNo").toLowerCase());
+
+      const results = [
+        setError("firstName", val("firstName").length < 2 ? "Enter your first name." : ""),
+        setError("lastName", val("lastName") ? "" : "Enter your last name."),
+        setError("dob", !dob ? "Select your date of birth." : age < 15 ? "You must be at least 15 years old." : ""),
+        setError("gender", gender ? "" : "Select a gender."),
+        setError("photo", photo && photo.size > 2 * 1024 * 1024 ? "Photo must be under 2 MB." : ""),
+        setError("email", /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val("email")) ? "" : "Enter a valid email address."),
+        setError("phone", /^[6-9]\d{9}$/.test(val("phone")) ? "" : "Enter a 10-digit mobile number."),
+        setError("address", val("address").length < 10 ? "Enter your full address." : ""),
+        setError("city", val("city") ? "" : "Enter your city."),
+        setError("state", $("state").value ? "" : "Select your state."),
+        setError("pincode", /^\d{6}$/.test(val("pincode")) ? "" : "Enter a 6-digit pincode."),
+        setError("college", val("college") ? "" : "Enter your college name."),
+        setError("regNo", !val("regNo") ? "Enter your register number." : dup ? "This register number is already registered." : ""),
+        setError("course", $("course").value ? "" : "Select your course."),
+        setError("dept", $("dept").value ? "" : "Select your department."),
+        setError("year", $("year").value ? "" : "Select your year of study."),
+        setError("guardian", val("guardian") ? "" : "Enter your guardian's name."),
+        setError("guardianPhone", /^[6-9]\d{9}$/.test(val("guardianPhone")) ? "" : "Enter a 10-digit mobile number."),
+        setError("password", pw.length >= 8 && /[A-Za-z]/.test(pw) && /\d/.test(pw) ? "" : "Use 8+ characters with a letter and a number."),
+        setError("confirm", $("confirm").value && $("confirm").value === pw ? "" : "Passwords do not match."),
+        setError("terms", $("terms").checked ? "" : "Accept the terms to continue.")
+      ];
+      return results.every(Boolean);
+    }
+
+    /* ---------- Photo: shrink to a small thumbnail so storage stays small ---------- */
+    function photoToThumb(file) {
+      return new Promise((resolve) => {
+        if (!file) return resolve("");
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const size = 80;
+            const canvas = document.createElement("canvas");
+            canvas.width = canvas.height = size;
+            const ctx = canvas.getContext("2d");
+            const s = Math.min(img.width, img.height);
+            ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+            resolve(canvas.toDataURL("image/jpeg", 0.7));
+          };
+          img.onerror = () => resolve("");
+          img.src = reader.result;
+        };
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /* ---------- Render list ---------- */
+    function esc(str) {
+      return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function render() {
+      const all = loadAll();
+      const q = $("search").value.trim().toLowerCase();
+      const list = all.filter((s) =>
+        [s.name, s.email, s.regNo, s.phone, s.dept, s.city].join(" ").toLowerCase().includes(q)
+      );
+      $("count").textContent = all.length + (all.length === 1 ? " student" : " students") + " registered" +
+        (q ? " · " + list.length + " match" + (list.length === 1 ? "" : "es") : "");
+
+      if (!list.length) {
+        $("tbody").innerHTML = '<tr><td class="empty" colspan="10">' +
+          (all.length ? "No matching registrations." : "No registrations yet. Submit the form above to add one.") + "</td></tr>";
+        return;
+      }
+
+      $("tbody").innerHTML = list.map((s) => `
+        <tr>
+          <td>${s.photo ? `<img src="${s.photo}" alt="" />` : `<div class="avatar">${esc(s.name.charAt(0).toUpperCase())}</div>`}</td>
+          <td><strong>${esc(s.name)}</strong><div class="hint">${esc(s.gender)}${s.bloodGroup ? " · " + esc(s.bloodGroup) : ""}</div></td>
+          <td>${esc(s.regNo)}</td>
+          <td>${esc(s.course)}<div class="hint">${esc(s.dept)}</div></td>
+          <td>${esc(s.year)}</td>
+          <td>${esc(s.email)}</td>
+          <td>${esc(s.phone)}</td>
+          <td>${esc(s.city)}</td>
+          <td>${esc(s.registeredOn)}</td>
+          <td><button type="button" class="del" data-id="${s.id}">Delete</button></td>
+        </tr>`).join("");
+    }
+
+    /* ---------- Submit ---------- */
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      $("success").textContent = "";
+      if (!validate()) {
+        const firstError = form.querySelector(".error:not(:empty)");
+        if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      const photo = await photoToThumb($("photo").files[0]);
+      const record = {
+        id: Date.now().toString(),
+        name: val("firstName") + " " + val("lastName"),
+        dob: $("dob").value,
+        gender: form.querySelector('input[name="gender"]:checked').value,
+        bloodGroup: $("bloodGroup").value,
+        photo,
+        email: val("email"),
+        phone: val("phone"),
+        address: val("address"),
+        city: val("city"),
+        state: $("state").value,
+        pincode: val("pincode"),
+        college: val("college"),
+        regNo: val("regNo"),
+        course: $("course").value,
+        dept: $("dept").value,
+        year: $("year").value,
+        interests: [...form.querySelectorAll('input[name="interest"]:checked')].map((c) => c.value),
+        guardian: val("guardian"),
+        guardianPhone: val("guardianPhone"),
+        registeredOn: new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+        // Password is intentionally NOT stored. Hash it on a server in a real app.
+      };
+      const all = loadAll();
+      all.unshift(record);
+      if (!saveAll(all)) return;
+
+      form.reset();
+      $("success").textContent = "Registration successful! See it in the list below.";
+      render();
+      $("listSection").scrollIntoView({ behavior: "smooth" });
+    });
+
+    form.addEventListener("reset", () => {
+      document.querySelectorAll(".error").forEach((el) => (el.textContent = ""));
+      $("success").textContent = "";
+    });
+
+    /* ---------- List actions ---------- */
+    $("tbody").addEventListener("click", (e) => {
+      const btn = e.target.closest(".del");
+      if (!btn) return;
+      if (confirm("Delete this registration?")) {
+        saveAll(loadAll().filter((s) => s.id !== btn.dataset.id));
+        render();
+      }
+    });
+
+    $("search").addEventListener("input", render);
+
+    $("clearAllBtn").addEventListener("click", () => {
+      if (loadAll().length && confirm("Delete ALL registrations? This cannot be undone.")) {
+        saveAll([]);
+        render();
+      }
+    });
+
+    $("exportBtn").addEventListener("click", () => {
+      const all = loadAll();
+      if (!all.length) return alert("Nothing to export yet.");
+      const cols = ["name", "dob", "gender", "bloodGroup", "email", "phone", "address", "city", "state", "pincode",
+        "college", "regNo", "course", "dept", "year", "interests", "guardian", "guardianPhone", "registeredOn"];
+      const cell = (v) => '"' + String(Array.isArray(v) ? v.join("; ") : v ?? "").replace(/"/g, '""') + '"';
+      const csv = [cols.join(","), ...all.map((s) => cols.map((c) => cell(s[c])).join(","))].join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+      a.download = "registrations.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    render();
+  </script>
+</body>
+</html>
